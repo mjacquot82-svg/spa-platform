@@ -1,1 +1,1 @@
-export {};
+export { useSchedulingCalendar } from './useSchedulingCalendar';

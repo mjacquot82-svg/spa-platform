@@ -1,63 +1,74 @@
-import type { EventInput } from '@fullcalendar/core';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import FullCalendar from '@fullcalendar/react';
-import timeGridPlugin from '@fullcalendar/timegrid';
+import { useState } from 'react';
 
-function dateInCurrentWeek(dayOffset: number, hour: number, minute = 0) {
+import { appointmentToCalendarEvent } from '../adapters';
+import { SchedulingCalendar } from '../components';
+import { useSchedulingCalendar } from '../hooks';
+import type { Appointment, CalendarEventChange } from '../types';
+
+function dateInCurrentWeek(dayOffset: number, hour: number, minute = 0): string {
   const date = new Date();
-  const mondayOffset = (date.getDay() + 6) % 7;
-
-  date.setDate(date.getDate() - mondayOffset + dayOffset);
-  date.setHours(hour, minute, 0, 0);
-
-  return date;
+  const mondayOffset = (date.getUTCDay() + 6) % 7;
+  date.setUTCDate(date.getUTCDate() - mondayOffset + dayOffset);
+  date.setUTCHours(hour, minute, 0, 0);
+  return date.toISOString();
 }
 
-const sampleAppointments: EventInput[] = [
+const sampleAppointments: Appointment[] = [
   {
-    id: 'appointment-1',
-    title: 'Swedish Massage · Avery',
-    start: dateInCurrentWeek(0, 9),
-    end: dateInCurrentWeek(0, 10),
-    color: '#315c49',
+    id: 'appointment-1', businessId: 'demo-business', resourceIds: ['avery'],
+    title: 'Swedish Massage · Avery', start: dateInCurrentWeek(0, 9),
+    end: dateInCurrentWeek(0, 10), status: 'confirmed',
   },
   {
-    id: 'appointment-2',
-    title: 'Facial Consultation · Jordan',
-    start: dateInCurrentWeek(1, 11, 30),
-    end: dateInCurrentWeek(1, 12, 15),
-    color: '#4f7664',
+    id: 'appointment-2', businessId: 'demo-business', resourceIds: ['jordan'],
+    title: 'Facial Consultation · Jordan', start: dateInCurrentWeek(1, 11, 30),
+    end: dateInCurrentWeek(1, 12, 15), status: 'tentative',
   },
   {
-    id: 'appointment-3',
-    title: 'Deep Tissue Massage · Morgan',
-    start: dateInCurrentWeek(2, 14),
-    end: dateInCurrentWeek(2, 15, 30),
-    color: '#715a9a',
+    id: 'appointment-3', businessId: 'demo-business', resourceIds: ['morgan'],
+    title: 'Deep Tissue Massage · Morgan', start: dateInCurrentWeek(2, 14),
+    end: dateInCurrentWeek(2, 15, 30), status: 'confirmed',
   },
   {
-    id: 'appointment-4',
-    title: 'Manicure · Riley',
-    start: dateInCurrentWeek(3, 10),
-    end: dateInCurrentWeek(3, 10, 45),
-    color: '#9a5a69',
+    id: 'appointment-4', businessId: 'demo-business', resourceIds: ['riley'],
+    title: 'Manicure · Riley', start: dateInCurrentWeek(3, 10),
+    end: dateInCurrentWeek(3, 10, 45), status: 'checked_in',
   },
   {
-    id: 'appointment-5',
-    title: 'Wellness Package · Casey',
-    start: dateInCurrentWeek(4, 13),
-    end: dateInCurrentWeek(4, 15),
-    color: '#876923',
+    id: 'appointment-5', businessId: 'demo-business', resourceIds: ['casey'],
+    title: 'Wellness Package · Casey', start: dateInCurrentWeek(4, 13),
+    end: dateInCurrentWeek(4, 15), status: 'confirmed',
   },
 ];
 
+function DebugValue({ value }: { value: unknown }) {
+  return (
+    <pre className="mt-1 overflow-x-auto whitespace-pre-wrap text-xs text-slate-600">
+      {value ? JSON.stringify(value, null, 2) : 'None yet'}
+    </pre>
+  );
+}
+
 export function CalendarDemo() {
-  // Future Business integration: scope the calendar to the active business and location.
-  // Future Customers integration: resolve appointment attendees and customer details.
-  // Future Catalog integration: display service names, durations, resources, and colors.
-  // Future Booking integration: load and persist appointment selections, moves, and resizes.
-  // Future Notifications integration: trigger reminders after booking changes are persisted.
+  const [events, setEvents] = useState(() => sampleAppointments.map(appointmentToCalendarEvent));
+  const calendar = useSchedulingCalendar();
+
+  const updateEvent = (change: CalendarEventChange) => {
+    setEvents((current) => current.map((event) => event.id === change.eventId
+      ? { ...event, start: change.newStart, end: change.newEnd }
+      : event));
+  };
+
+  const handleMove = (change: CalendarEventChange) => {
+    updateEvent(change);
+    calendar.recordMove(change);
+  };
+
+  const handleResize = (change: CalendarEventChange) => {
+    updateEvent(change);
+    calendar.recordResize(change);
+  };
+
   return (
     <main className="mx-auto min-h-screen w-full max-w-7xl px-3 py-6 sm:px-6 lg:px-8">
       <section className="rounded-2xl border border-jds-100 bg-white p-3 shadow-sm sm:p-6">
@@ -69,36 +80,36 @@ export function CalendarDemo() {
             Appointment calendar
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-slate-600 sm:text-base">
-            Select open time slots, or drag and resize the sample appointments to evaluate
-            calendar interactions.
+            Select open time slots, or drag, resize, and click the five sample appointments.
           </p>
         </div>
 
-        <div className="calendar-demo min-w-0 overflow-x-auto">
-          <div className="min-w-[42rem] md:min-w-0">
-            <FullCalendar
-              plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-              initialView="timeGridWeek"
-              headerToolbar={{
-                left: 'prev,next today',
-                center: 'title',
-                right: 'timeGridDay,timeGridWeek',
-              }}
-              buttonText={{ day: 'Day', week: 'Week' }}
-              initialEvents={sampleAppointments}
-              nowIndicator
-              editable
-              eventStartEditable
-              eventDurationEditable
-              selectable
-              selectMirror
-              allDaySlot={false}
-              slotMinTime="07:00:00"
-              slotMaxTime="20:00:00"
-              height="auto"
-            />
+        <SchedulingCalendar
+          events={events}
+          onTimeRangeSelected={calendar.selectTimeRange}
+          onEventClick={calendar.selectEvent}
+          onEventMoved={handleMove}
+          onEventResized={handleResize}
+        />
+
+        <section className="mt-6" aria-labelledby="calendar-debug-heading">
+          <h2 id="calendar-debug-heading" className="text-sm font-semibold text-jds-950">
+            Neutral callback data
+          </h2>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            {[
+              ['Selected time range', calendar.selectedTimeRange],
+              ['Clicked event', calendar.selectedEvent],
+              ['Moved event', calendar.mostRecentMove],
+              ['Resized event', calendar.mostRecentResize],
+            ].map(([label, value]) => (
+              <article key={label as string} className="min-w-0 rounded-xl bg-slate-50 p-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-700">{label as string}</h3>
+                <DebugValue value={value} />
+              </article>
+            ))}
           </div>
-        </div>
+        </section>
       </section>
     </main>
   );
