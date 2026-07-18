@@ -19,3 +19,27 @@ body {
   min-width: 320px;
   min-height: 100vh;
 }
+
+.calendar-demo .fc {
+  --fc-border-color: #e2e8f0;
+  --fc-button-bg-color: #315c49;
+  --fc-button-border-color: #315c49;
+  --fc-button-hover-bg-color: #274a3b;
+  --fc-button-hover-border-color: #274a3b;
+  --fc-button-active-bg-color: #17201c;
+  --fc-button-active-border-color: #17201c;
+  --fc-today-bg-color: #f0f6f2;
+  font-size: 0.875rem;
+}
+
+.calendar-demo .fc .fc-toolbar-title {
+  color: #17201c;
+  font-size: clamp(1rem, 3vw, 1.5rem);
+}
+
+@media (max-width: 767px) {
+  .calendar-demo .fc .fc-toolbar {
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+}

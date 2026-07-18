@@ -1,43 +1,37 @@
-import { AuthProvider, useAuth } from './core/auth';
-import { BusinessService } from './core/business';
-import { supabase } from './core/database';
-import { CatalogItemService } from './modules/catalog';
+import { lazy, Suspense } from 'react';
 
-const modules = [
-  { name: 'Authentication', implementation: AuthProvider },
-  { name: 'Business', implementation: BusinessService },
-  { name: 'Catalog', implementation: CatalogItemService },
-] as const;
+const CalendarDemo = lazy(() => import('./modules/scheduling/pages/CalendarDemo'));
+const PlatformApp = lazy(() => import('./app/PlatformApp'));
 
-function PlatformStatus() {
-  const { loading, user } = useAuth();
+const calendarDemoPath = '/calendar-demo';
 
+function LoadingScreen() {
   return (
     <main className="mx-auto flex min-h-screen max-w-5xl items-center px-6 py-16">
-      <section className="w-full rounded-2xl border border-jds-100 bg-white p-8 shadow-sm sm:p-12">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-jds-700">
-          JDS Platform
+      <p className="text-sm text-slate-600" role="status">
+        Loading…
+      </p>
+    </main>
+  );
+}
+
+function SupabaseConfigurationRequired() {
+  return (
+    <main className="mx-auto flex min-h-screen max-w-5xl items-center px-6 py-16">
+      <section className="w-full rounded-2xl border border-amber-200 bg-white p-8 shadow-sm sm:p-12">
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-700">
+          Configuration required
         </p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-jds-950">
-          Application foundation is ready.
+          Supabase is not configured.
         </h1>
         <p className="mt-3 max-w-2xl text-slate-600">
-          React, Vite, TypeScript, Tailwind CSS, and Supabase are configured.
-        </p>
-
-        <div className="mt-8 grid gap-3 sm:grid-cols-3">
-          {modules.map(({ name, implementation }) => (
-            <div className="rounded-xl bg-jds-100 p-4" key={name}>
-              <p className="font-medium text-jds-950">{name}</p>
-              <p className="mt-1 text-sm text-jds-700">
-                {implementation.name} loaded
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <p className="mt-8 text-sm text-slate-500" role="status">
-          Authentication: {loading ? 'hydrating session…' : user ? 'session active' : 'ready'}
+          Set <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> to use
+          this part of the platform. The local calendar demo remains available at{' '}
+          <a className="font-medium text-jds-700 underline" href={calendarDemoPath}>
+            {calendarDemoPath}
+          </a>
+          .
         </p>
       </section>
     </main>
@@ -45,9 +39,25 @@ function PlatformStatus() {
 }
 
 export default function App() {
+  if (window.location.pathname === calendarDemoPath) {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <CalendarDemo />
+      </Suspense>
+    );
+  }
+
+  const hasSupabaseConfiguration = Boolean(
+    import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY,
+  );
+
+  if (!hasSupabaseConfiguration) {
+    return <SupabaseConfigurationRequired />;
+  }
+
   return (
-    <AuthProvider supabase={supabase}>
-      <PlatformStatus />
-    </AuthProvider>
+    <Suspense fallback={<LoadingScreen />}>
+      <PlatformApp />
+    </Suspense>
   );
 }
