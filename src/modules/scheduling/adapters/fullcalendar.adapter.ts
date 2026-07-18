@@ -5,13 +5,15 @@ import type { EventResizeDoneArg } from '@fullcalendar/interaction';
 import type { Appointment, CalendarEvent, CalendarEventChange } from '../types';
 
 export function appointmentToCalendarEvent(appointment: Appointment): CalendarEvent {
+  const metadataTitle = appointment.metadata.title;
   return {
     id: appointment.id,
-    title: appointment.title,
+    title: typeof metadataTitle === 'string' ? metadataTitle : `Appointment · ${appointment.catalogItemId}`,
     start: appointment.start,
     end: appointment.end,
     resourceIds: appointment.resourceIds,
-    editable: appointment.status !== 'cancelled' && appointment.status !== 'completed',
+    editable: appointment.active && appointment.status !== 'cancelled' &&
+      appointment.status !== 'completed' && appointment.status !== 'no_show',
     metadata: { appointmentStatus: appointment.status },
   };
 }

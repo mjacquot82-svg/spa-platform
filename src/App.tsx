@@ -1,9 +1,12 @@
 import { lazy, Suspense } from 'react';
 
-const CalendarDemo = lazy(() => import('./modules/scheduling/pages/CalendarDemo'));
+import { findDemoPage } from './core/routing';
+
+const DeveloperPlayground = lazy(() => import('./app/DeveloperPlayground'));
 const PlatformApp = lazy(() => import('./app/PlatformApp'));
 
 const calendarDemoPath = '/calendar-demo';
+const playgroundPath = '/playground';
 
 function LoadingScreen() {
   return (
@@ -39,10 +42,20 @@ function SupabaseConfigurationRequired() {
 }
 
 export default function App() {
-  if (window.location.pathname === calendarDemoPath) {
+  if (import.meta.env.DEV && window.location.pathname === playgroundPath) {
     return (
       <Suspense fallback={<LoadingScreen />}>
-        <CalendarDemo />
+        <DeveloperPlayground />
+      </Suspense>
+    );
+  }
+
+  const demo = findDemoPage(window.location.pathname);
+  if (demo) {
+    const DemoComponent = demo.component;
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <DemoComponent />
       </Suspense>
     );
   }

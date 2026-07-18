@@ -15,29 +15,34 @@ function dateInCurrentWeek(dayOffset: number, hour: number, minute = 0): string 
 
 const sampleAppointments: Appointment[] = [
   {
-    id: 'appointment-1', businessId: 'demo-business', resourceIds: ['avery'],
-    title: 'Swedish Massage · Avery', start: dateInCurrentWeek(0, 9),
-    end: dateInCurrentWeek(0, 10), status: 'confirmed',
+    id: 'appointment-1', businessId: 'demo-business', customerId: 'customer-1',
+    catalogItemId: 'swedish-massage', resourceIds: ['avery'], start: dateInCurrentWeek(0, 9),
+    end: dateInCurrentWeek(0, 10), status: 'confirmed', notes: '', active: true,
+    metadata: { title: 'Swedish Massage · Avery' },
   },
   {
-    id: 'appointment-2', businessId: 'demo-business', resourceIds: ['jordan'],
-    title: 'Facial Consultation · Jordan', start: dateInCurrentWeek(1, 11, 30),
-    end: dateInCurrentWeek(1, 12, 15), status: 'tentative',
+    id: 'appointment-2', businessId: 'demo-business', customerId: 'customer-2',
+    catalogItemId: 'facial-consultation', resourceIds: ['jordan'], start: dateInCurrentWeek(1, 11, 30),
+    end: dateInCurrentWeek(1, 12, 15), status: 'tentative', notes: '', active: true,
+    metadata: { title: 'Facial Consultation · Jordan' },
   },
   {
-    id: 'appointment-3', businessId: 'demo-business', resourceIds: ['morgan'],
-    title: 'Deep Tissue Massage · Morgan', start: dateInCurrentWeek(2, 14),
-    end: dateInCurrentWeek(2, 15, 30), status: 'confirmed',
+    id: 'appointment-3', businessId: 'demo-business', customerId: 'customer-3',
+    catalogItemId: 'deep-tissue', resourceIds: ['morgan'], start: dateInCurrentWeek(2, 14),
+    end: dateInCurrentWeek(2, 15, 30), status: 'confirmed', notes: '', active: true,
+    metadata: { title: 'Deep Tissue Massage · Morgan' },
   },
   {
-    id: 'appointment-4', businessId: 'demo-business', resourceIds: ['riley'],
-    title: 'Manicure · Riley', start: dateInCurrentWeek(3, 10),
-    end: dateInCurrentWeek(3, 10, 45), status: 'checked_in',
+    id: 'appointment-4', businessId: 'demo-business', customerId: 'customer-4',
+    catalogItemId: 'manicure', resourceIds: ['riley'], start: dateInCurrentWeek(3, 10),
+    end: dateInCurrentWeek(3, 10, 45), status: 'checked_in', notes: '', active: true,
+    metadata: { title: 'Manicure · Riley' },
   },
   {
-    id: 'appointment-5', businessId: 'demo-business', resourceIds: ['casey'],
-    title: 'Wellness Package · Casey', start: dateInCurrentWeek(4, 13),
-    end: dateInCurrentWeek(4, 15), status: 'confirmed',
+    id: 'appointment-5', businessId: 'demo-business', customerId: 'customer-5',
+    catalogItemId: 'wellness-package', resourceIds: ['casey'], start: dateInCurrentWeek(4, 13),
+    end: dateInCurrentWeek(4, 15), status: 'confirmed', notes: '', active: true,
+    metadata: { title: 'Wellness Package · Casey' },
   },
 ];
 

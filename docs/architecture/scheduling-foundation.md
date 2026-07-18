@@ -11,16 +11,19 @@ FullCalendar Standard is the selected calendar UI implementation. It is wrapped 
 `SchedulingCalendar` and a private adapter so other JDS modules exchange neutral values and
 must not import FullCalendar types. FullCalendar Premium resource views are not adopted.
 
-Scheduling Engine status: **Not Selected / Evaluating**.
+External Scheduling Engine status: **Not Selected / Evaluating**. The pure JDS availability
+calculator described below is domain logic, not a separately adopted scheduling engine.
 
 ## Domain types
 
 - `SchedulingResource` identifies active staff, rooms, or equipment owned by a business.
 - `Appointment` represents a scheduled interval, its shared resources, lifecycle status,
-  and optional links to customer and catalog records.
-- `WorkingHours` describes one resource's enabled wall-clock interval for a weekday, where
-  Sunday is 0 and Saturday is 6.
-- `AvailabilityException` marks a resource interval as explicitly available or unavailable.
+  and required links to customer and catalog records.
+- `WorkingHours` describes one resource's recurring wall-clock ranges for a weekday, where
+  Sunday is 0 and Saturday is 6. A day may be disabled or contain multiple non-overlapping ranges.
+- `AvailabilityException` is an active or archived, business-owned temporary override for one
+  resource. It carries an ISO 8601 interval, display details, metadata, and an `available` or
+  `unavailable` type.
 - `CalendarEvent` is the library-independent UI projection used by JDS calendar consumers.
 - `TimeRangeSelection` and `CalendarEventChange` are neutral calendar interaction payloads.
 
@@ -31,6 +34,27 @@ Calculations preserve and compare the wall date and offset supplied by the calle
 silently converting through the host's local timezone. Slot generation preserves the offset
 from its `date` input; a date-only `YYYY-MM-DD` value is explicitly interpreted as UTC.
 Intervals crossing a calendar day are not supported by working-hours checks in this phase.
+
+## Actual availability
+
+Actual availability is the union of enabled recurring `WorkingHours` and active `available`
+exception intervals, minus every active `unavailable` exception interval and every active
+appointment in a blocking status. Unavailable overrides win when exceptions overlap. Available
+exceptions can extend a resource beyond normal hours;
+unavailable exceptions can partially or completely close normal hours. Multiple exceptions are
+allowed, and archived exceptions are retained by the in-memory domain repository but ignored by
+availability calculations.
+
+In shorthand: **Working Hours + Availability Exceptions - Appointments = Actual Availability**.
+Appointments are scheduling facts. Booking is a later workflow that may create appointments;
+the appointment domain does not itself implement booking, payments, notifications, or customer
+search. Cancelled and no-show appointments do not consume availability, and archived appointments
+are ignored.
+
+Repositories and services require `businessId` for every operation. The current adapter is
+intentionally in-memory only. Exception timestamps require ISO 8601 values with an explicit UTC
+or numeric offset; the availability engine currently evaluates same-day exceptions in the offset
+of the requested calendar day.
 
 This foundation does not model daylight-saving transitions. **TODO:** business-specific IANA
 timezone support is required before production scheduling.

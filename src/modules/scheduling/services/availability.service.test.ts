@@ -10,7 +10,8 @@ import {
 } from './availability.service';
 
 const mondayHours: WorkingHours = {
-  resourceId: 'staff-1', dayOfWeek: 1, enabled: true, startTime: '09:00', endTime: '12:00',
+  id: 'monday', businessId: 'business-1', resourceId: 'staff-1', dayOfWeek: 1,
+  enabled: true, timeRanges: [{ startTime: '09:00', endTime: '12:00' }],
 };
 
 function appointment(
@@ -19,7 +20,10 @@ function appointment(
   resourceIds = ['staff-1'],
   status: Appointment['status'] = 'confirmed',
 ): Appointment {
-  return { id: `${start}-${resourceIds.join()}`, businessId: 'business-1', resourceIds, title: 'Visit', start, end, status };
+  return {
+    id: `${start}-${resourceIds.join()}`, businessId: 'business-1', customerId: 'customer-1',
+    catalogItemId: 'service-1', resourceIds, start, end, status, notes: '', metadata: {}, active: true,
+  };
 }
 
 describe('intervalsOverlap', () => {
@@ -73,8 +77,8 @@ describe('availability blockers', () => {
 
   it('detects overlapping unavailable exceptions for the resource', () => {
     const exceptions: AvailabilityException[] = [{
-      id: 'break', resourceId: 'staff-1', start: '2026-07-20T09:30:00Z',
-      end: '2026-07-20T10:30:00Z', type: 'unavailable',
+      id: 'break', businessId: 'business-1', resourceId: 'staff-1', start: '2026-07-20T09:30:00Z',
+      end: '2026-07-20T10:30:00Z', type: 'unavailable', title: 'Break', metadata: {}, active: true,
     }];
     expect(hasUnavailableException(proposed, 'staff-1', exceptions)).toBe(true);
     expect(hasUnavailableException(proposed, 'staff-2', exceptions)).toBe(false);
@@ -84,9 +88,9 @@ describe('availability blockers', () => {
 describe('findAvailableSlotsForDay', () => {
   function find(duration: number, increment = 30, endTime = '12:00') {
     return findAvailableSlotsForDay({
-      date: '2026-07-20T00:00:00Z', resourceId: 'staff-1',
+      date: '2026-07-20T00:00:00Z', businessId: 'business-1', resourceId: 'staff-1',
       requestedDurationMinutes: duration, slotIncrementMinutes: increment,
-      workingHours: [{ ...mondayHours, endTime }], existingAppointments: [], availabilityExceptions: [],
+      workingHours: [{ ...mondayHours, timeRanges: [{ startTime: '09:00', endTime }] }], existingAppointments: [], availabilityExceptions: [],
     });
   }
 
@@ -113,10 +117,10 @@ describe('findAvailableSlotsForDay', () => {
 
   it('excludes appointments and unavailable exceptions while allowing touching boundaries', () => {
     const slots = findAvailableSlotsForDay({
-      date: '2026-07-20', resourceId: 'staff-1', requestedDurationMinutes: 30,
-      slotIncrementMinutes: 30, workingHours: [{ ...mondayHours, endTime: '11:00' }],
+      date: '2026-07-20', businessId: 'business-1', resourceId: 'staff-1', requestedDurationMinutes: 30,
+      slotIncrementMinutes: 30, workingHours: [{ ...mondayHours, timeRanges: [{ startTime: '09:00', endTime: '11:00' }] }],
       existingAppointments: [appointment('2026-07-20T09:30:00Z', '2026-07-20T10:00:00Z')],
-      availabilityExceptions: [{ id: 'break', resourceId: 'staff-1', start: '2026-07-20T10:30:00Z', end: '2026-07-20T11:00:00Z', type: 'unavailable' }],
+      availabilityExceptions: [{ id: 'break', businessId: 'business-1', resourceId: 'staff-1', start: '2026-07-20T10:30:00Z', end: '2026-07-20T11:00:00Z', type: 'unavailable', title: 'Break', metadata: {}, active: true }],
     });
     expect(slots).toEqual([
       { start: '2026-07-20T09:00:00Z', end: '2026-07-20T09:30:00Z' },

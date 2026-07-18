@@ -60,22 +60,29 @@ export function isWithinWorkingHours(
   if (!workingHours.enabled || !validInterval(requested)) return false;
   const start = parseWallTimestamp(requested.start);
   const end = parseWallTimestamp(requested.end);
-  const opens = parseClockTime(workingHours.startTime);
-  const closes = parseClockTime(workingHours.endTime);
-  if (!start || !end || opens === null || closes === null || closes <= opens) return false;
+  if (!start || !end) return false;
   if (start.offset !== end.offset || start.date !== end.date) return false;
 
   const dayOfWeek = new Date(`${start.date}T00:00:00Z`).getUTCDay();
-  return workingHours.dayOfWeek === dayOfWeek && start.minutes >= opens && end.minutes <= closes;
+  return workingHours.dayOfWeek === dayOfWeek && workingHours.timeRanges.some((range) => {
+    const opens = parseClockTime(range.startTime);
+    const closes = parseClockTime(range.endTime);
+    return opens !== null && closes !== null && closes > opens &&
+      start.minutes >= opens && end.minutes <= closes;
+  });
 }
 
 export function hasAppointmentConflict(
   proposed: Pick<Appointment, 'start' | 'end' | 'resourceIds'>,
   existingAppointments: Appointment[],
+  businessId?: string,
 ): boolean {
   return existingAppointments.some(
     (appointment) =>
+      appointment.active &&
+      (businessId === undefined || appointment.businessId === businessId) &&
       appointment.status !== 'cancelled' &&
+      appointment.status !== 'no_show' &&
       appointment.resourceIds.some((id) => proposed.resourceIds.includes(id)) &&
       intervalsOverlap(proposed, appointment),
   );
@@ -85,9 +92,12 @@ export function hasUnavailableException(
   requested: TimeInterval,
   resourceId: string,
   availabilityExceptions: AvailabilityException[],
+  businessId?: string,
 ): boolean {
   return availabilityExceptions.some(
     (exception) =>
+      exception.active &&
+      (businessId === undefined || exception.businessId === businessId) &&
       exception.resourceId === resourceId &&
       exception.type === 'unavailable' &&
       intervalsOverlap(requested, exception),
@@ -113,6 +123,7 @@ function dateAndOffset(value: string): { date: string; offset: string } | null {
  */
 export function findAvailableSlotsForDay({
   date,
+  businessId,
   resourceId,
   requestedDurationMinutes,
   slotIncrementMinutes,
@@ -121,36 +132,69 @@ export function findAvailableSlotsForDay({
   availabilityExceptions,
 }: FindAvailableSlotsForDayInput): TimeInterval[] {
   const calendarDay = dateAndOffset(date);
-  if (!calendarDay || requestedDurationMinutes <= 0 || slotIncrementMinutes <= 0) return [];
+  if (!calendarDay || !businessId.trim() || requestedDurationMinutes <= 0 || slotIncrementMinutes <= 0) return [];
   const weekday = new Date(`${calendarDay.date}T00:00:00Z`).getUTCDay();
   const hoursForDay = workingHours.filter(
-    (hours) => hours.resourceId === resourceId && hours.dayOfWeek === weekday && hours.enabled,
+    (hours) => hours.businessId === businessId && hours.resourceId === resourceId &&
+      hours.dayOfWeek === weekday && hours.enabled,
   );
-  const slots: TimeInterval[] = [];
+  const activeExceptions = availabilityExceptions.filter(
+    (exception) => exception.businessId === businessId && exception.active && exception.resourceId === resourceId,
+  );
+  const candidateRanges: Array<{ start: number; end: number }> = [];
 
   for (const hours of hoursForDay) {
-    const opens = parseClockTime(hours.startTime);
-    const closes = parseClockTime(hours.endTime);
-    if (opens === null || closes === null || closes <= opens) continue;
-
-    for (let startMinutes = opens; startMinutes + requestedDurationMinutes <= closes; startMinutes += slotIncrementMinutes) {
-      const candidate = {
-        start: slotTimestamp(calendarDay.date, startMinutes, calendarDay.offset),
-        end: slotTimestamp(
-          calendarDay.date,
-          startMinutes + requestedDurationMinutes,
-          calendarDay.offset,
-        ),
-      };
-      const proposed = { ...candidate, resourceIds: [resourceId] };
-      if (
-        !hasAppointmentConflict(proposed, existingAppointments) &&
-        !hasUnavailableException(candidate, resourceId, availabilityExceptions)
-      ) {
-        slots.push(candidate);
-      }
+    for (const range of hours.timeRanges) {
+      const start = parseClockTime(range.startTime);
+      const end = parseClockTime(range.endTime);
+      if (start !== null && end !== null && end > start) candidateRanges.push({ start, end });
     }
   }
 
-  return slots;
+  for (const exception of activeExceptions) {
+    if (exception.type !== 'available') continue;
+    const start = parseWallTimestamp(exception.start);
+    const end = parseWallTimestamp(exception.end);
+    if (!start || !end || start.date !== calendarDay.date || end.date !== calendarDay.date ||
+        start.offset !== calendarDay.offset || end.offset !== calendarDay.offset || end.minutes <= start.minutes) continue;
+    candidateRanges.push({ start: start.minutes, end: end.minutes });
+  }
+  const mergedRanges = mergeRanges(candidateRanges);
+  const slots: TimeInterval[] = [];
+  const seen = new Set<string>();
+
+  for (const range of mergedRanges) {
+      for (let startMinutes = range.start; startMinutes + requestedDurationMinutes <= range.end; startMinutes += slotIncrementMinutes) {
+        const candidate = {
+          start: slotTimestamp(calendarDay.date, startMinutes, calendarDay.offset),
+          end: slotTimestamp(
+            calendarDay.date,
+            startMinutes + requestedDurationMinutes,
+            calendarDay.offset,
+          ),
+        };
+        const proposed = { ...candidate, resourceIds: [resourceId] };
+        if (
+          !hasAppointmentConflict(proposed, existingAppointments, businessId) &&
+          !hasUnavailableException(candidate, resourceId, activeExceptions, businessId) &&
+          !seen.has(`${candidate.start}/${candidate.end}`)
+        ) {
+          slots.push(candidate);
+          seen.add(`${candidate.start}/${candidate.end}`);
+        }
+      }
+  }
+
+  return slots.sort((left, right) => left.start.localeCompare(right.start));
+}
+
+function mergeRanges(ranges: Array<{ start: number; end: number }>): Array<{ start: number; end: number }> {
+  const sorted = ranges.map((range) => ({ ...range })).sort((left, right) => left.start - right.start);
+  const merged: Array<{ start: number; end: number }> = [];
+  for (const range of sorted) {
+    const previous = merged.at(-1);
+    if (previous && range.start <= previous.end) previous.end = Math.max(previous.end, range.end);
+    else merged.push(range);
+  }
+  return merged;
 }
