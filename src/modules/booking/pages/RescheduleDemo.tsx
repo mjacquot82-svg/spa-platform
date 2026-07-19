@@ -11,9 +11,11 @@ import {
   InMemoryAvailabilityExceptionRepository,
   InMemorySchedulingResourceRepository,
   InMemoryWorkingHoursRepository,
+  InMemoryPlanningPeriodRepository,
   SchedulingCalendar,
   SchedulingResourceService,
   SchedulingService,
+  PlanningPeriodService,
   type Appointment,
   type SchedulingResource,
   type TimeInterval,
@@ -52,7 +54,8 @@ const workingHoursService = new WorkingHoursService(new InMemoryWorkingHoursRepo
 ));
 const exceptionService = new AvailabilityExceptionService(new InMemoryAvailabilityExceptionRepository());
 const appointmentService = new AppointmentService(new InMemoryAppointmentRepository(appointmentSeed));
-const schedulingService = new SchedulingService(catalogService, resourceService, workingHoursService, exceptionService, appointmentService);
+const planningPeriodService = new PlanningPeriodService(new InMemoryPlanningPeriodRepository(publishedPeriods()));
+const schedulingService = new SchedulingService(catalogService, resourceService, workingHoursService, exceptionService, appointmentService, planningPeriodService);
 
 export default function RescheduleDemo() {
   const [searchParams] = useSearchParams();
@@ -231,6 +234,7 @@ function createSeedAppointment(id: string, customerId: string, catalogItemId: st
 function treatment(id: string, name: string, durationMinutes: number): CatalogItem {
   return { id, businessId: BUSINESS_ID, type: 'Service', name, description: '', category: 'Spa', image: null, active: true, durationMinutes, bufferBeforeMinutes: 0, bufferAfterMinutes: 0, resourceTypesRequired: ['staff'], createdAt: today, updatedAt: today, deletedAt: null };
 }
+function publishedPeriods() { return Array.from({ length: 14 }, (_, index) => { const date = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + index, 1)); return { id: `published-${index}`, businessId: BUSINESS_ID, year: date.getUTCFullYear(), month: date.getUTCMonth() + 1, status: 'published' as const }; }); }
 
 function formatDateTime(value: string): string {
   return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' }).format(new Date(value));

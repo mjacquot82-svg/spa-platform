@@ -18,6 +18,7 @@ export const applicationNavigation: NavigationGroup[] = [
     items: [
       { label: 'Schedule', to: '/calendar', icon: 'calendar' },
       { label: 'Resources', to: '/appointments', icon: 'appointments' },
+      { label: 'Planning', to: '/planning', icon: 'calendar' },
       { label: 'New appointment', to: '/booking', icon: 'booking' },
     ],
   },

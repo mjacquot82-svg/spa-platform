@@ -25,3 +25,6 @@ export { InMemoryWorkingHoursRepository } from './working-hours.repository';
 export type { WorkingHoursRepository } from './working-hours.repository';
 export { WorkingHoursService } from './working-hours.service';
 export { validateWorkingHours } from './working-hours.validation';
+export { InMemoryPlanningPeriodRepository } from './planning-period.repository';
+export type { PlanningPeriodRepository } from './planning-period.repository';
+export { PlanningPeriodService } from './planning-period.service';

@@ -12,9 +12,11 @@ import {
   InMemoryAvailabilityExceptionRepository,
   InMemorySchedulingResourceRepository,
   InMemoryWorkingHoursRepository,
+  InMemoryPlanningPeriodRepository,
   SchedulingCalendar,
   SchedulingResourceService,
   SchedulingService,
+  PlanningPeriodService,
   type Appointment,
   type AppointmentSuggestion,
   type CalendarEvent,
@@ -58,7 +60,8 @@ const workingHoursSeed = resourceSeed.flatMap((resource) =>
 const workingHoursService = new WorkingHoursService(new InMemoryWorkingHoursRepository(workingHoursSeed));
 const exceptionService = new AvailabilityExceptionService(new InMemoryAvailabilityExceptionRepository());
 const appointmentService = new AppointmentService(new InMemoryAppointmentRepository());
-const schedulingService = new SchedulingService(catalogService, resourceService, workingHoursService, exceptionService, appointmentService);
+const planningPeriodService = new PlanningPeriodService(new InMemoryPlanningPeriodRepository(publishedPeriods(BUSINESS_ID)));
+const schedulingService = new SchedulingService(catalogService, resourceService, workingHoursService, exceptionService, appointmentService, planningPeriodService);
 const publishedForms: Form[] = [
   { id: 'form-intake', businessId: BUSINESS_ID, name: 'Spa Intake Form', description: 'Health and contact intake.', version: 1, published: true, archived: false, metadata: {}, fields: [] },
   { id: 'form-consent', businessId: BUSINESS_ID, name: 'Treatment Consent', description: 'General treatment consent.', version: 1, published: true, archived: false, metadata: {}, fields: [] },
@@ -171,3 +174,4 @@ function selectFeaturedSuggestions(suggestions: AppointmentSuggestion[]): Array<
 function Step({ number }: { number: number }) { return <span className="mr-2 inline-grid size-6 place-items-center rounded-full bg-jds-100 text-xs text-jds-700">{number}</span>; }
 function Review({ label, value }: { label: string; value: string }) { return <div className="flex justify-between gap-4 border-b border-slate-100 pb-2"><dt className="text-slate-500">{label}</dt><dd className="text-right font-medium">{value}</dd></div>; }
 function treatment(id: string, name: string, category: string, durationMinutes: number, bufferBeforeMinutes = 0, bufferAfterMinutes = 0): CatalogItem { return { id, businessId: BUSINESS_ID, type: 'Service', name, description: '', category, image: null, active: true, durationMinutes, bufferBeforeMinutes, bufferAfterMinutes, resourceTypesRequired: ['staff'], createdAt: now, updatedAt: now, deletedAt: null }; }
+function publishedPeriods(businessId: string) { return Array.from({ length: 14 }, (_, index) => { const date = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + index, 1)); return { id: `published-${index}`, businessId, year: date.getUTCFullYear(), month: date.getUTCMonth() + 1, status: 'published' as const }; }); }

@@ -11,9 +11,10 @@ import type { AppointmentService } from './appointment.service';
 import type { AvailabilityExceptionService } from './availability-exception.service';
 import type { SchedulingResourceService } from './resource.service';
 import type { WorkingHoursService } from './working-hours.service';
+import type { PlanningPeriodService } from './planning-period.service';
 
 const DEFAULT_SUGGESTIONS = 10;
-const MAX_SEARCH_DAYS = 56;
+const MAX_SEARCH_DAYS = 366;
 
 /** Coordinates existing scheduling data and owns all multi-day appointment searching. */
 export class SchedulingService {
@@ -23,6 +24,7 @@ export class SchedulingService {
     private readonly workingHours: WorkingHoursService,
     private readonly exceptions: AvailabilityExceptionService,
     private readonly appointments: AppointmentService,
+    private readonly planningPeriods: PlanningPeriodService,
   ) {}
 
   async findNextAvailableAppointments({
@@ -51,11 +53,13 @@ export class SchedulingService {
     if (searchedResources.length === 0) return [];
 
     const searchStart = normalizeDate(preferredDate ?? new Date().toISOString().slice(0, 10));
-    const [hours, exceptions, appointments] = await Promise.all([
+    const [hours, exceptions, appointments, publishedPeriods] = await Promise.all([
       this.workingHours.listWorkingHours(scopedBusinessId, { enabled: true }),
       this.exceptions.listExceptions(scopedBusinessId, { active: true }),
       this.appointments.listAppointments(scopedBusinessId, { active: true }),
+      this.planningPeriods.listPeriods(scopedBusinessId, { status: 'published' }),
     ]);
+    const bookableMonths = new Set(publishedPeriods.map((period) => `${period.year}-${String(period.month).padStart(2, '0')}`));
     const bufferBefore = item.bufferBeforeMinutes ?? 0;
     const bufferAfter = item.bufferAfterMinutes ?? 0;
     const occupiedDuration = bufferBefore + item.durationMinutes + bufferAfter;
@@ -63,6 +67,7 @@ export class SchedulingService {
 
     for (let dayOffset = 0; dayOffset < MAX_SEARCH_DAYS && candidates.length < requestedCount * 3; dayOffset += 1) {
       const date = addDays(searchStart, dayOffset);
+      if (!bookableMonths.has(date.slice(0, 7))) continue;
       for (const resource of searchedResources) {
         const slots = findAvailableSlotsForDay({
           date,

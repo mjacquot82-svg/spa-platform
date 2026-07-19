@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { CatalogItemService, InMemoryCatalogItemRepository, type CatalogItem } from '../../catalog';
+import type { PlanningPeriod } from '../types';
 import { AppointmentService } from './appointment.service';
 import { InMemoryAppointmentRepository } from './appointment.repository';
 import { AvailabilityExceptionService } from './availability-exception.service';
@@ -10,6 +11,8 @@ import { InMemorySchedulingResourceRepository } from './resource.repository';
 import { SchedulingService } from './scheduling.service';
 import { WorkingHoursService } from './working-hours.service';
 import { InMemoryWorkingHoursRepository } from './working-hours.repository';
+import { PlanningPeriodService } from './planning-period.service';
+import { InMemoryPlanningPeriodRepository } from './planning-period.repository';
 
 const businessId = 'business-1';
 const monday = '2026-07-20';
@@ -19,7 +22,7 @@ function treatment(id: string, durationMinutes: number, bufferBeforeMinutes = 0,
   return { ...base, id, type: 'Service', name: `${durationMinutes} minute treatment`, durationMinutes, bufferBeforeMinutes, bufferAfterMinutes, resourceTypesRequired: ['staff'] };
 }
 
-function createScheduling(items: CatalogItem[]) {
+function createScheduling(items: CatalogItem[], periods: PlanningPeriod[] = [{ id: 'july', businessId, year: 2026, month: 7, status: 'published' }]) {
   return new SchedulingService(
     new CatalogItemService(new InMemoryCatalogItemRepository(items)),
     new SchedulingResourceService(new InMemorySchedulingResourceRepository([
@@ -34,6 +37,7 @@ function createScheduling(items: CatalogItem[]) {
     ])),
     new AvailabilityExceptionService(new InMemoryAvailabilityExceptionRepository()),
     new AppointmentService(new InMemoryAppointmentRepository()),
+    new PlanningPeriodService(new InMemoryPlanningPeriodRepository(periods)),
   );
 }
 
@@ -72,5 +76,14 @@ describe('SchedulingService.findNextAvailableAppointments', () => {
     const suggestions = await scheduling.findNextAvailableAppointments({ businessId, catalogItemId: 'ritual', preferredResourceId: 'ashley', preferredDate: '2026-07-19', numberOfSuggestions: 1 });
     expect(suggestions[0].dayLabel).toBe('Tomorrow');
     expect(suggestions[0].friendlyDate).toContain('Mon');
+  });
+
+  it('skips draft months and returns suggestions only from published periods', async () => {
+    const scheduling = createScheduling([treatment('massage', 60)], [
+      { id: 'august', businessId, year: 2026, month: 8, status: 'draft' },
+      { id: 'september', businessId, year: 2026, month: 9, status: 'published' },
+    ]);
+    const [suggestion] = await scheduling.findNextAvailableAppointments({ businessId, catalogItemId: 'massage', preferredDate: '2026-08-01', numberOfSuggestions: 1 });
+    expect(suggestion.start.startsWith('2026-09')).toBe(true);
   });
 });

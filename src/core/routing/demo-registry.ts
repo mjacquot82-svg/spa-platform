@@ -11,6 +11,13 @@ export interface DemoPageRegistration {
 /** Add a registration here to make a demo routable and list it in the Playground. */
 export const demoPages: readonly DemoPageRegistration[] = [
   {
+    path: '/planning-demo',
+    title: 'Planning Demo',
+    description: 'Prepare future availability, publish September, and see Booking availability update immediately.',
+    module: 'Scheduling',
+    component: lazy(() => import('../../modules/scheduling/pages/PlanningDemo')),
+  },
+  {
     path: '/forms-demo',
     title: 'Dynamic Forms Demo',
     description: 'Render, validate, and submit a reusable form definition entirely in memory.',

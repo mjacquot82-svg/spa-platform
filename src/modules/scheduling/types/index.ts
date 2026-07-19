@@ -59,3 +59,5 @@ export type {
   WorkingHoursValidationIssue,
   WorkingHoursValidationResult,
 } from './working-hours-validation';
+export { PLANNING_PERIOD_STATUSES } from './planning-period';
+export type { CreatePlanningPeriodInput, PlanningPeriod, PlanningPeriodFilters, PlanningPeriodStatus } from './planning-period';

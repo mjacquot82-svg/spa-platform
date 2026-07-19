@@ -12,6 +12,7 @@ const ResourcesPage = lazy(() => import('./modules/scheduling/pages/ResourcesDem
 const BookingPage = lazy(() => import('./modules/booking/pages/BookingDemo'));
 const ReschedulePage = lazy(() => import('./modules/booking/pages/RescheduleDemo'));
 const AppointmentFormsPage = lazy(() => import('./modules/booking/pages/AppointmentFormsDemo'));
+const PlanningPage = lazy(() => import('./modules/scheduling/pages/PlanningDemo'));
 
 function LoadingScreen() {
   return <main className="grid min-h-screen place-items-center bg-slate-50"><div className="text-center" role="status"><span className="mx-auto grid size-11 animate-pulse place-items-center rounded-xl bg-jds-950 text-sm font-bold text-white shadow-sm">J</span><p className="mt-3 text-sm font-medium text-slate-500">Loading workspace…</p></div></main>;
@@ -29,6 +30,7 @@ export default function App() {
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="calendar" element={<CalendarPage />} />
             <Route path="appointments" element={<ResourcesPage />} />
+            <Route path="planning" element={<PlanningPage />} />
             <Route path="booking" element={<BookingPage />} />
             <Route path="reschedule" element={<ReschedulePage />} />
             <Route path="appointment-forms" element={<AppointmentFormsPage />} />
