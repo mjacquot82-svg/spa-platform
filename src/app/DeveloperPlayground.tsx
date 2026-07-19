@@ -2,6 +2,10 @@ import { useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 import { demoPages, findDemoPage, type DemoPageRegistration } from '../core/routing';
+import { ApplicationServicesProvider } from './ApplicationServicesProvider';
+import { createDemoApplication } from './demo-application';
+
+const demoApplication = createDemoApplication();
 
 export function DeveloperPlayground() {
   const location = useLocation();
@@ -10,7 +14,7 @@ export function DeveloperPlayground() {
 
   if (selectedDemo) {
     const DemoComponent = selectedDemo.component;
-    return <DemoComponent />;
+    return <ApplicationServicesProvider application={demoApplication}><DemoComponent /></ApplicationServicesProvider>;
   }
 
   return (

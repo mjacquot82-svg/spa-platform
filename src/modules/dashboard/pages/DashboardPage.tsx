@@ -2,33 +2,17 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
 import { PageContainer, PageHeader } from '../../../core/layouts';
-import { AppointmentFormAssignmentService, InMemoryAppointmentFormAssignmentRepository, type AppointmentFormAssignment } from '../../booking';
-import { CustomerService, InMemoryCustomerRepository, type Customer } from '../../customers';
-import { FormService, InMemoryFormRepository, type Form } from '../../forms';
-import { AppointmentService, InMemoryAppointmentRepository, type Appointment, type AppointmentStatus } from '../../scheduling';
+import { useApplicationServices } from '../../../app/useApplicationServices';
+import type { AppointmentFormAssignment } from '../../booking';
+import type { Customer } from '../../customers';
+import type { Form } from '../../forms';
+import type { Appointment, AppointmentStatus } from '../../scheduling';
 
-const businessId = 'spa-dashboard-business';
 const today = new Date().toISOString().slice(0, 10);
-const now = new Date().toISOString();
-const customerSeed: Customer[] = [
-  customer('customer-ava', 'Ava', 'Morgan', '555-0101', '2026-07-18T09:00:00Z'),
-  customer('customer-noah', 'Noah', 'Williams', '555-0102', '2026-07-17T14:00:00Z'),
-  customer('customer-mia', 'Mia', 'Thompson', '555-0103', '2026-07-16T11:00:00Z'),
-];
-const appointmentSeed: Appointment[] = [
-  appointment('appointment-ava', 'customer-ava', '09:00', '10:00', 'confirmed', 'Signature Massage', 'Ashley'),
-  appointment('appointment-noah', 'customer-noah', '11:00', '11:45', 'confirmed', 'Restorative Facial', 'Jordan'),
-  appointment('appointment-mia', 'customer-mia', '14:00', '15:30', 'checked_in', 'Wellness Ritual', 'Ashley'),
-];
-const formSeed: Form[] = [form('form-intake', 'Spa Intake Form'), form('form-consent', 'Treatment Consent')];
-const assignmentSeed: AppointmentFormAssignment[] = [assignment('assignment-1', 'appointment-ava', 'form-intake'), assignment('assignment-2', 'appointment-noah', 'form-consent')];
-const customerService = new CustomerService(new InMemoryCustomerRepository(customerSeed));
-const appointmentService = new AppointmentService(new InMemoryAppointmentRepository(appointmentSeed));
-const formService = new FormService(new InMemoryFormRepository(formSeed));
-const assignmentService = new AppointmentFormAssignmentService(new InMemoryAppointmentFormAssignmentRepository(assignmentSeed), appointmentService, formService);
 type ListFilter = 'all' | 'forms' | 'checked_in';
 
 export default function DashboardPage() {
+  const { businessId, customers: customerService, appointments: appointmentService, forms: formService, appointmentForms: assignmentService } = useApplicationServices();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [pendingForms, setPendingForms] = useState<AppointmentFormAssignment[]>([]);
   const [forms, setForms] = useState<Form[]>([]);
@@ -52,7 +36,7 @@ export default function DashboardPage() {
       setAppointments(nextAppointments); setPendingForms(nextAssignments); setForms(nextForms); setCustomers(nextCustomers);
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'Unable to load today’s appointments.'); }
     finally { setLoading(false); }
-  }, []);
+  }, [appointmentService, assignmentService, businessId, customerService, formService]);
   useEffect(() => { void refresh(); }, [refresh]);
   useEffect(() => { const requested = searchParams.get('appointment'); if (requested) setSelectedAppointmentId(requested); }, [searchParams]);
   useEffect(() => {
@@ -137,7 +121,3 @@ function EmptyState({ filtered }: { filtered: boolean }) { return <div className
 function formatTime(value: string): string { return new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' }).format(new Date(value)); }
 function durationMinutes(item: Appointment): number { return Math.round((Date.parse(item.end) - Date.parse(item.start)) / 60000); }
 function appointmentName(id: string, appointments: Appointment[], customers: Customer[]): string { const item = appointments.find((record) => record.id === id); const customerRecord = customers.find((record) => record.id === item?.customerId); return customerRecord ? `${customerRecord.firstName} ${customerRecord.lastName}` : id; }
-function customer(id: string, firstName: string, lastName: string, phone: string, createdAt: string): Customer { return { id, businessId, firstName, lastName, email: `${firstName.toLowerCase()}@example.test`, phone, address: { line1: '12 Cedar Way', country: 'US' }, notes: '', active: true, createdAt, updatedAt: createdAt, deletedAt: null }; }
-function appointment(id: string, customerId: string, start: string, end: string, status: Appointment['status'], service: string, provider: string): Appointment { return { id, businessId, customerId, catalogItemId: `treatment-${id}`, resourceIds: [`provider-${provider.toLowerCase()}`], start: `${today}T${start}:00Z`, end: `${today}T${end}:00Z`, status, notes: '', metadata: { title: `${service}`, service, provider }, active: true }; }
-function form(id: string, name: string): Form { return { id, businessId, name, description: '', version: 1, published: true, archived: false, metadata: {}, fields: [] }; }
-function assignment(id: string, appointmentId: string, formId: string): AppointmentFormAssignment { return { id, businessId, appointmentId, formId, status: 'pending', assignedAt: now, completedAt: null }; }
