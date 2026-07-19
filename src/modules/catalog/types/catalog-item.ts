@@ -2,6 +2,16 @@ export const CATALOG_ITEM_TYPES = ['Product', 'Service'] as const;
 
 export type CatalogItemType = (typeof CATALOG_ITEM_TYPES)[number];
 
+export const CATALOG_RESOURCE_TYPES = ['staff', 'room', 'equipment'] as const;
+export type CatalogResourceType = (typeof CATALOG_RESOURCE_TYPES)[number];
+
+export interface ServiceSchedulingMetadata {
+  durationMinutes?: number;
+  bufferBeforeMinutes?: number;
+  bufferAfterMinutes?: number;
+  resourceTypesRequired?: CatalogResourceType[];
+}
+
 export interface CatalogItemBase {
   id: string;
   businessId: string;
@@ -20,7 +30,7 @@ export interface ProductCatalogItem extends CatalogItemBase {
   type: 'Product';
 }
 
-export interface ServiceCatalogItem extends CatalogItemBase {
+export interface ServiceCatalogItem extends CatalogItemBase, ServiceSchedulingMetadata {
   type: 'Service';
 }
 

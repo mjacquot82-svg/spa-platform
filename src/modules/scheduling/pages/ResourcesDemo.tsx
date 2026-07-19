@@ -48,7 +48,7 @@ export function ResourcesDemo() {
     <main className="mx-auto min-h-screen w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <header className="max-w-2xl">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-jds-700">
-          Scheduling resources demo
+          Appointment resources
         </p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-jds-950">
           Resources by type

@@ -71,6 +71,18 @@ export class AppointmentService {
     return this.repository.getById(requireId(businessId, 'businessId'), requireId(id, 'id'));
   }
 
+  async checkInAppointment(businessId: string, id: string): Promise<Appointment> {
+    const scopedBusinessId = requireId(businessId, 'businessId');
+    const scopedId = requireId(id, 'id');
+    const appointment = await this.repository.getById(scopedBusinessId, scopedId);
+    if (!appointment) throw new Error('Appointment not found.');
+    if (appointment.status === 'checked_in') return appointment;
+    if (!appointment.active || appointment.status !== 'confirmed') {
+      throw new Error('Only active, confirmed appointments can be checked in.');
+    }
+    return this.repository.update(scopedBusinessId, scopedId, { status: 'checked_in' });
+  }
+
   private async assertNoConflict(
     businessId: string,
     proposed: Pick<Appointment, 'resourceIds' | 'start' | 'end' | 'status' | 'active'>,

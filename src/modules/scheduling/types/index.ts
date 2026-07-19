@@ -14,7 +14,10 @@ export type {
 export type {
   AvailabilityException,
   AvailabilityExceptionFilters,
+  AppointmentSuggestion,
+  AppointmentSuggestionReason,
   CreateAvailabilityExceptionInput,
+  FindNextAvailableAppointmentsInput,
   FindAvailableSlotsForDayInput,
   TimeInterval,
   UpdateAvailabilityExceptionInput,

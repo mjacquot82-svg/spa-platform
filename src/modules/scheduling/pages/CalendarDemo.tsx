@@ -17,26 +17,26 @@ const sampleAppointments: Appointment[] = [
   {
     id: 'appointment-1', businessId: 'demo-business', customerId: 'customer-1',
     catalogItemId: 'swedish-massage', resourceIds: ['avery'], start: dateInCurrentWeek(0, 9),
-    end: dateInCurrentWeek(0, 10), status: 'confirmed', notes: '', active: true,
-    metadata: { title: 'Swedish Massage · Avery' },
+    end: dateInCurrentWeek(0, 9, 30), status: 'confirmed', notes: '', active: true,
+    metadata: { title: 'Express Service (30 min) · Avery' },
   },
   {
     id: 'appointment-2', businessId: 'demo-business', customerId: 'customer-2',
     catalogItemId: 'facial-consultation', resourceIds: ['jordan'], start: dateInCurrentWeek(1, 11, 30),
     end: dateInCurrentWeek(1, 12, 15), status: 'tentative', notes: '', active: true,
-    metadata: { title: 'Facial Consultation · Jordan' },
+    metadata: { title: 'Facial Consultation (45 min) · Jordan' },
   },
   {
     id: 'appointment-3', businessId: 'demo-business', customerId: 'customer-3',
     catalogItemId: 'deep-tissue', resourceIds: ['morgan'], start: dateInCurrentWeek(2, 14),
     end: dateInCurrentWeek(2, 15, 30), status: 'confirmed', notes: '', active: true,
-    metadata: { title: 'Deep Tissue Massage · Morgan' },
+    metadata: { title: 'Deep Tissue Massage (90 min) · Morgan' },
   },
   {
     id: 'appointment-4', businessId: 'demo-business', customerId: 'customer-4',
     catalogItemId: 'manicure', resourceIds: ['riley'], start: dateInCurrentWeek(3, 10),
-    end: dateInCurrentWeek(3, 10, 45), status: 'checked_in', notes: '', active: true,
-    metadata: { title: 'Manicure · Riley' },
+    end: dateInCurrentWeek(3, 11), status: 'checked_in', notes: '', active: true,
+    metadata: { title: 'Signature Service (60 min) · Riley' },
   },
   {
     id: 'appointment-5', businessId: 'demo-business', customerId: 'customer-5',
@@ -79,13 +79,13 @@ export function CalendarDemo() {
       <section className="rounded-2xl border border-jds-100 bg-white p-3 shadow-sm sm:p-6">
         <div className="mb-6">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-jds-700">
-            Scheduling demo
+            Schedule
           </p>
           <h1 className="mt-2 text-2xl font-semibold tracking-tight text-jds-950 sm:text-3xl">
             Appointment calendar
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-slate-600 sm:text-base">
-            Select open time slots, or drag, resize, and click the five sample appointments.
+            Review appointments and refine times when needed.
           </p>
         </div>
 
@@ -97,9 +97,9 @@ export function CalendarDemo() {
           onEventResized={handleResize}
         />
 
-        <section className="mt-6" aria-labelledby="calendar-debug-heading">
+        {import.meta.env.DEV && <section className="mt-6" aria-labelledby="calendar-debug-heading">
           <h2 id="calendar-debug-heading" className="text-sm font-semibold text-jds-950">
-            Neutral callback data
+            Selected appointment
           </h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             {[
@@ -114,7 +114,7 @@ export function CalendarDemo() {
               </article>
             ))}
           </div>
-        </section>
+        </section>}
       </section>
     </main>
   );

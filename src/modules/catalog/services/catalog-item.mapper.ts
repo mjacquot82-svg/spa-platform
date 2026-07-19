@@ -25,7 +25,14 @@ export function toCatalogItem(row: CatalogItemRow): CatalogItem {
     return { ...common, type: 'Product' };
   }
 
-  return { ...common, type: 'Service' };
+  return {
+    ...common,
+    type: 'Service',
+    ...(row.duration_minutes === null ? {} : { durationMinutes: row.duration_minutes }),
+    bufferBeforeMinutes: row.buffer_before_minutes,
+    bufferAfterMinutes: row.buffer_after_minutes,
+    ...(row.resource_types_required.length ? { resourceTypesRequired: [...row.resource_types_required] } : {}),
+  };
 }
 
 export function toCatalogItemInsert(
@@ -39,6 +46,10 @@ export function toCatalogItemInsert(
     description: input.description,
     category: input.category,
     image: input.image,
+    duration_minutes: input.type === 'Service' ? input.durationMinutes ?? null : null,
+    buffer_before_minutes: input.type === 'Service' ? input.bufferBeforeMinutes ?? 0 : 0,
+    buffer_after_minutes: input.type === 'Service' ? input.bufferAfterMinutes ?? 0 : 0,
+    resource_types_required: input.type === 'Service' ? input.resourceTypesRequired ?? [] : [],
     active: input.active,
   };
   return row;
@@ -52,5 +63,11 @@ export function toCatalogItemUpdate(input: UpdateCatalogItemInput): CatalogItemU
   if (input.category !== undefined) common.category = input.category;
   if (input.image !== undefined) common.image = input.image;
   if (input.active !== undefined) common.active = input.active;
+  if (input.type === 'Service') {
+    if (input.durationMinutes !== undefined) common.duration_minutes = input.durationMinutes;
+    if (input.bufferBeforeMinutes !== undefined) common.buffer_before_minutes = input.bufferBeforeMinutes;
+    if (input.bufferAfterMinutes !== undefined) common.buffer_after_minutes = input.bufferAfterMinutes;
+    if (input.resourceTypesRequired !== undefined) common.resource_types_required = [...input.resourceTypesRequired];
+  }
   return common;
 }

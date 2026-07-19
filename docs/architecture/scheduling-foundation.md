@@ -59,6 +59,19 @@ of the requested calendar day.
 This foundation does not model daylight-saving transitions. **TODO:** business-specific IANA
 timezone support is required before production scheduling.
 
+## Catalog and booking boundary
+
+Catalog owns the characteristics of a service: its duration, optional setup and cleanup buffers,
+and the kinds of resources it requires. These values describe what must be scheduled; Catalog does
+not generate slots or decide whether a resource is available.
+
+Scheduling owns time calculations and appointment searching. `SchedulingService` reads treatment
+characteristics from Catalog, identifies eligible providers, and combines duration and buffers with
+working hours, availability exceptions, and existing appointments. Booking is a thin workflow layer:
+it passes receptionist preferences to Scheduling, renders the returned suggestions, and creates the
+selected interval through `AppointmentService`. No availability, duration, provider-search, or
+conflict rule is implemented in Booking or Catalog.
+
 ## Later phases
 
 - Persistent resources

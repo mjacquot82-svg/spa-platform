@@ -49,6 +49,13 @@ export function intervalsOverlap(first: TimeInterval, second: TimeInterval): boo
   return Date.parse(first.start) < Date.parse(second.end) && Date.parse(second.start) < Date.parse(first.end);
 }
 
+/** Returns the whole-minute duration of a valid interval, or null for invalid input. */
+export function intervalDurationMinutes(interval: TimeInterval): number | null {
+  if (!validInterval(interval)) return null;
+  const milliseconds = Date.parse(interval.end) - Date.parse(interval.start);
+  return milliseconds % 60_000 === 0 ? milliseconds / 60_000 : null;
+}
+
 /**
  * Uses the calendar date and wall-clock values encoded in the ISO strings. Both
  * timestamps must carry the same explicit offset and remain on one calendar day.
@@ -127,6 +134,7 @@ export function findAvailableSlotsForDay({
   resourceId,
   requestedDurationMinutes,
   slotIncrementMinutes,
+  excludeAppointmentId,
   workingHours,
   existingAppointments,
   availabilityExceptions,
@@ -141,6 +149,9 @@ export function findAvailableSlotsForDay({
   const activeExceptions = availabilityExceptions.filter(
     (exception) => exception.businessId === businessId && exception.active && exception.resourceId === resourceId,
   );
+  const blockingAppointments = excludeAppointmentId
+    ? existingAppointments.filter((appointment) => appointment.id !== excludeAppointmentId)
+    : existingAppointments;
   const candidateRanges: Array<{ start: number; end: number }> = [];
 
   for (const hours of hoursForDay) {
@@ -175,7 +186,7 @@ export function findAvailableSlotsForDay({
         };
         const proposed = { ...candidate, resourceIds: [resourceId] };
         if (
-          !hasAppointmentConflict(proposed, existingAppointments, businessId) &&
+          !hasAppointmentConflict(proposed, blockingAppointments, businessId) &&
           !hasUnavailableException(candidate, resourceId, activeExceptions, businessId) &&
           !seen.has(`${candidate.start}/${candidate.end}`)
         ) {

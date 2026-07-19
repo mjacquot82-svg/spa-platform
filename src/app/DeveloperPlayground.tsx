@@ -1,9 +1,17 @@
 import { useMemo } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
-import { demoPages, type DemoPageRegistration } from '../core/routing';
+import { demoPages, findDemoPage, type DemoPageRegistration } from '../core/routing';
 
 export function DeveloperPlayground() {
+  const location = useLocation();
+  const selectedDemo = findDemoPage(location.pathname.replace(/^\/playground/, '') || '/');
   const demosByModule = useMemo(() => groupByModule(demoPages), []);
+
+  if (selectedDemo) {
+    const DemoComponent = selectedDemo.component;
+    return <DemoComponent />;
+  }
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -33,9 +41,9 @@ export function DeveloperPlayground() {
 
             <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {demos.map((demo) => (
-                <a
+                <Link
                   key={demo.path}
-                  href={demo.path}
+                  to={`/playground${demo.path}`}
                   className="group rounded-2xl border border-jds-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-jds-300 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jds-700"
                 >
                   <div className="flex items-start justify-between gap-4">
@@ -46,7 +54,7 @@ export function DeveloperPlayground() {
                   </div>
                   <p className="mt-2 text-sm leading-6 text-slate-600">{demo.description}</p>
                   <code className="mt-4 block text-xs text-slate-500">{demo.path}</code>
-                </a>
+                </Link>
               ))}
             </div>
           </section>

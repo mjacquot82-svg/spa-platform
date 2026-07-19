@@ -47,13 +47,13 @@ export function AppointmentsDemo() {
   return (
     <main className="mx-auto min-h-screen w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <header className="max-w-3xl">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-jds-700">Scheduling demo</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-jds-700">Appointment list</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-jds-950">Appointments and availability</h1>
         <p className="mt-3 text-slate-600">Working hours plus exceptions, minus active appointments with blocking statuses.</p>
       </header>
 
       <div className="mt-6 flex flex-wrap items-end gap-4">
-        <div className="inline-flex rounded-xl bg-slate-100 p-1" aria-label="Demo view">
+        <div className="inline-flex rounded-xl bg-slate-100 p-1" aria-label="Appointment view">
           {(['day', 'resource'] as const).map((option) => (
             <button key={option} type="button" onClick={() => setView(option)}
               className={`rounded-lg px-4 py-2 text-sm font-medium capitalize ${view === option ? 'bg-white text-jds-950 shadow-sm' : 'text-slate-600'}`}>

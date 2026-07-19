@@ -37,7 +37,34 @@ export interface FindAvailableSlotsForDayInput {
   resourceId: string;
   requestedDurationMinutes: number;
   slotIncrementMinutes: number;
+  /** Appointment omitted from conflict checks, for replacement-slot searches. */
+  excludeAppointmentId?: string;
   workingHours: import('./working-hours').WorkingHours[];
   existingAppointments: import('./appointment').Appointment[];
   availabilityExceptions: AvailabilityException[];
+}
+
+export interface FindNextAvailableAppointmentsInput {
+  businessId: string;
+  catalogItemId: string;
+  preferredResourceId?: string;
+  preferredDate?: string;
+  numberOfSuggestions?: number;
+}
+
+export type AppointmentSuggestionReason =
+  | 'Earliest Available'
+  | 'Preferred Provider'
+  | 'Morning'
+  | 'Afternoon';
+
+export interface AppointmentSuggestion {
+  resource: import('./resource').SchedulingResource;
+  start: string;
+  end: string;
+  dayLabel: string;
+  friendlyDate: string;
+  friendlyTime: string;
+  duration: number;
+  reason: AppointmentSuggestionReason;
 }

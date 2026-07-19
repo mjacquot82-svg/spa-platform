@@ -16,7 +16,7 @@ function PlatformStatus() {
     <main className="mx-auto flex min-h-screen max-w-5xl items-center px-6 py-16">
       <section className="w-full rounded-2xl border border-jds-100 bg-white p-8 shadow-sm sm:p-12">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-jds-700">
-          JDS Platform
+          JDS Spa
         </p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-jds-950">
           Application foundation is ready.

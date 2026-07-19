@@ -6,6 +6,10 @@ export type CatalogItemRow = {
   description: string | null;
   category: string | null;
   image: string | null;
+  duration_minutes: number | null;
+  buffer_before_minutes: number;
+  buffer_after_minutes: number;
+  resource_types_required: Array<'staff' | 'room' | 'equipment'>;
   active: boolean;
   created_at: string;
   updated_at: string;

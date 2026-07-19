@@ -17,7 +17,7 @@ export function AvailabilityExceptionsDemo() {
   return (
     <main className="mx-auto min-h-screen w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
       <header className="max-w-3xl">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-jds-700">Scheduling demo</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-jds-700">Time away</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-jds-950">Availability exceptions</h1>
         <p className="mt-3 text-slate-600">
           Compare normal working hours with temporary unavailable blocks and available extensions.

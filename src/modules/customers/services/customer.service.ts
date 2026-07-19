@@ -20,6 +20,11 @@ export class CustomerService {
     return this.repository.getById(requireId(businessId, 'businessId'), requireId(id, 'id'));
   }
 
+  listRecent(businessId: string, limit = 5): Promise<Customer[]> {
+    if (!Number.isInteger(limit) || limit < 1) throw new TypeError('limit must be a positive integer.');
+    return this.repository.listRecent(requireId(businessId, 'businessId'), limit);
+  }
+
   create(businessId: string, input: CreateCustomerInput): Promise<Customer> {
     assertValid(input, false);
     return this.repository.create(requireId(businessId, 'businessId'), normalizeCreate(input));

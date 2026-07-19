@@ -5,6 +5,7 @@ import {
   findAvailableSlotsForDay,
   hasAppointmentConflict,
   hasUnavailableException,
+  intervalDurationMinutes,
   intervalsOverlap,
   isWithinWorkingHours,
 } from './availability.service';
@@ -45,6 +46,17 @@ describe('intervalsOverlap', () => {
     const valid = { start: '2026-07-20T10:00:00Z', end: '2026-07-20T11:00:00Z' };
     expect(intervalsOverlap({ start: valid.start, end: valid.start }, valid)).toBe(false);
     expect(intervalsOverlap({ start: valid.end, end: valid.start }, valid)).toBe(false);
+  });
+});
+
+describe('intervalDurationMinutes', () => {
+  it('returns whole-minute interval durations', () => {
+    expect(intervalDurationMinutes({ start: '2026-07-20T09:00:00Z', end: '2026-07-20T10:30:00Z' })).toBe(90);
+  });
+
+  it('rejects invalid and partial-minute intervals', () => {
+    expect(intervalDurationMinutes({ start: 'invalid', end: '2026-07-20T10:30:00Z' })).toBeNull();
+    expect(intervalDurationMinutes({ start: '2026-07-20T09:00:00Z', end: '2026-07-20T09:00:30Z' })).toBeNull();
   });
 });
 
@@ -126,5 +138,16 @@ describe('findAvailableSlotsForDay', () => {
       { start: '2026-07-20T09:00:00Z', end: '2026-07-20T09:30:00Z' },
       { start: '2026-07-20T10:00:00Z', end: '2026-07-20T10:30:00Z' },
     ]);
+  });
+
+  it('can exclude the appointment being rescheduled from blockers', () => {
+    const selected = appointment('2026-07-20T09:00:00Z', '2026-07-20T09:30:00Z');
+    const slots = findAvailableSlotsForDay({
+      date: '2026-07-20', businessId: 'business-1', resourceId: 'staff-1', requestedDurationMinutes: 30,
+      slotIncrementMinutes: 30, excludeAppointmentId: selected.id,
+      workingHours: [{ ...mondayHours, timeRanges: [{ startTime: '09:00', endTime: '10:00' }] }],
+      existingAppointments: [selected], availabilityExceptions: [],
+    });
+    expect(slots).toHaveLength(2);
   });
 });

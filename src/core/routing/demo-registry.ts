@@ -11,6 +11,34 @@ export interface DemoPageRegistration {
 /** Add a registration here to make a demo routable and list it in the Playground. */
 export const demoPages: readonly DemoPageRegistration[] = [
   {
+    path: '/forms-demo',
+    title: 'Dynamic Forms Demo',
+    description: 'Render, validate, and submit a reusable form definition entirely in memory.',
+    module: 'Forms',
+    component: lazy(() => import('../../modules/forms/pages/FormsDemo')),
+  },
+  {
+    path: '/booking-demo',
+    title: 'Receptionist Booking Demo',
+    description: 'Create an appointment through the customer, catalog, and scheduling services.',
+    module: 'Booking',
+    component: lazy(() => import('../../modules/booking/pages/BookingDemo')),
+  },
+  {
+    path: '/appointment-forms-demo',
+    title: 'Appointment Forms Demo',
+    description: 'Assign published forms to appointments and review assignment status.',
+    module: 'Booking',
+    component: lazy(() => import('../../modules/booking/pages/AppointmentFormsDemo')),
+  },
+  {
+    path: '/reschedule-demo',
+    title: 'Appointment Rescheduling Demo',
+    description: 'Find replacement availability and reschedule an existing appointment.',
+    module: 'Booking',
+    component: lazy(() => import('../../modules/booking/pages/RescheduleDemo')),
+  },
+  {
     path: '/calendar-demo',
     title: 'Calendar Demo',
     description: 'Explore calendar selection, event clicks, drag-and-drop, and resizing.',

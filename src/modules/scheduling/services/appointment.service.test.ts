@@ -85,3 +85,15 @@ describe('appointment availability integration', () => {
     expect(calculate(await service.listAppointments(businessId))).toHaveLength(4);
   });
 });
+
+describe('AppointmentService check-in', () => {
+  it('checks in an active confirmed appointment', async () => {
+    const service = new AppointmentService(new InMemoryAppointmentRepository([seeded('confirmed')]));
+    await expect(service.checkInAppointment(businessId, 'confirmed')).resolves.toMatchObject({ status: 'checked_in' });
+  });
+
+  it('rejects check-in for non-confirmed appointments', async () => {
+    const service = new AppointmentService(new InMemoryAppointmentRepository([seeded('cancelled', { status: 'cancelled' })]));
+    await expect(service.checkInAppointment(businessId, 'cancelled')).rejects.toThrow('Only active, confirmed appointments can be checked in.');
+  });
+});

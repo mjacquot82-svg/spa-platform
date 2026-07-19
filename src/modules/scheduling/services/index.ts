@@ -2,6 +2,7 @@ export {
   findAvailableSlotsForDay,
   hasAppointmentConflict,
   hasUnavailableException,
+  intervalDurationMinutes,
   intervalsOverlap,
   isWithinWorkingHours,
 } from './availability.service';
@@ -13,7 +14,7 @@ export { InMemoryAppointmentRepository } from './appointment.repository';
 export type { AppointmentRepository } from './appointment.repository';
 export { AppointmentService } from './appointment.service';
 export { validateAppointment } from './appointment.validation';
-export { schedulingService } from './scheduling.service';
+export { SchedulingService, schedulingService } from './scheduling.service';
 export {
   InMemorySchedulingResourceRepository,
 } from './resource.repository';

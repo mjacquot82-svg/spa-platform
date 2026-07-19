@@ -1,76 +1,45 @@
 import { lazy, Suspense } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
-import { findDemoPage } from './core/routing';
+import { PlaceholderPage } from './app/PlaceholderPage';
+import { AppShell } from './core/layouts';
 
-const DeveloperPlayground = lazy(() => import('./app/DeveloperPlayground'));
-const PlatformApp = lazy(() => import('./app/PlatformApp'));
-
-const calendarDemoPath = '/calendar-demo';
-const playgroundPath = '/playground';
+const DashboardPage = lazy(() => import('./modules/dashboard/pages/DashboardPage'));
+const DeveloperPlayground = import.meta.env.DEV ? lazy(() => import('./app/DeveloperPlayground')) : null;
+const NotFoundPage = lazy(() => import('./app/NotFoundPage'));
+const CalendarPage = lazy(() => import('./modules/scheduling/pages/CalendarDemo'));
+const ResourcesPage = lazy(() => import('./modules/scheduling/pages/ResourcesDemo'));
+const BookingPage = lazy(() => import('./modules/booking/pages/BookingDemo'));
+const ReschedulePage = lazy(() => import('./modules/booking/pages/RescheduleDemo'));
+const AppointmentFormsPage = lazy(() => import('./modules/booking/pages/AppointmentFormsDemo'));
 
 function LoadingScreen() {
-  return (
-    <main className="mx-auto flex min-h-screen max-w-5xl items-center px-6 py-16">
-      <p className="text-sm text-slate-600" role="status">
-        Loading…
-      </p>
-    </main>
-  );
-}
-
-function SupabaseConfigurationRequired() {
-  return (
-    <main className="mx-auto flex min-h-screen max-w-5xl items-center px-6 py-16">
-      <section className="w-full rounded-2xl border border-amber-200 bg-white p-8 shadow-sm sm:p-12">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-700">
-          Configuration required
-        </p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-jds-950">
-          Supabase is not configured.
-        </h1>
-        <p className="mt-3 max-w-2xl text-slate-600">
-          Set <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> to use
-          this part of the platform. The local calendar demo remains available at{' '}
-          <a className="font-medium text-jds-700 underline" href={calendarDemoPath}>
-            {calendarDemoPath}
-          </a>
-          .
-        </p>
-      </section>
-    </main>
-  );
+  return <main className="grid min-h-screen place-items-center bg-slate-50"><div className="text-center" role="status"><span className="mx-auto grid size-11 animate-pulse place-items-center rounded-xl bg-jds-950 text-sm font-bold text-white shadow-sm">J</span><p className="mt-3 text-sm font-medium text-slate-500">Loading workspace…</p></div></main>;
 }
 
 export default function App() {
-  if (import.meta.env.DEV && window.location.pathname === playgroundPath) {
-    return (
-      <Suspense fallback={<LoadingScreen />}>
-        <DeveloperPlayground />
-      </Suspense>
-    );
-  }
-
-  const demo = findDemoPage(window.location.pathname);
-  if (demo) {
-    const DemoComponent = demo.component;
-    return (
-      <Suspense fallback={<LoadingScreen />}>
-        <DemoComponent />
-      </Suspense>
-    );
-  }
-
-  const hasSupabaseConfiguration = Boolean(
-    import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY,
-  );
-
-  if (!hasSupabaseConfiguration) {
-    return <SupabaseConfigurationRequired />;
-  }
-
   return (
-    <Suspense fallback={<LoadingScreen />}>
-      <PlatformApp />
-    </Suspense>
+    <BrowserRouter>
+      <Suspense fallback={<LoadingScreen />}>
+        <Routes>
+          {DeveloperPlayground && <Route path="/playground/*" element={<DeveloperPlayground />} />}
+
+          <Route element={<AppShell />}>
+            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path="dashboard" element={<DashboardPage />} />
+            <Route path="calendar" element={<CalendarPage />} />
+            <Route path="appointments" element={<ResourcesPage />} />
+            <Route path="booking" element={<BookingPage />} />
+            <Route path="reschedule" element={<ReschedulePage />} />
+            <Route path="appointment-forms" element={<AppointmentFormsPage />} />
+            <Route path="customers" element={<PlaceholderPage title="Customers" description="Manage customer profiles and relationships." />} />
+            <Route path="catalog" element={<PlaceholderPage title="Treatments" description="Manage treatments, products, and appointment details." />} />
+            <Route path="reports" element={<PlaceholderPage title="Reports" description="Business reporting and operational insights." />} />
+            <Route path="settings" element={<PlaceholderPage title="Settings" description="Configure business preferences." />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Route>
+        </Routes>
+      </Suspense>
+    </BrowserRouter>
   );
 }
